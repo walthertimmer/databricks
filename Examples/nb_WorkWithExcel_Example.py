@@ -1,13 +1,26 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC #### Excel
+# MAGIC ## Excel
+
+# COMMAND ----------
+
+workspace = spark.conf.get("spark.databricks.workspaceUrl").split('.')[0]
+
+# COMMAND ----------
+
+spark.catalog.listCatalogs()
 
 # COMMAND ----------
 
 # basic params
-catalog_name = "uc_verevening"
-schema_name = "test"
-volume_name = "test_volume"
+if workspace == "adb-1508641611891977": #01
+    catalog_name = "hive_metastore"
+    schema_name = "demo"
+    volume_name = "demo_volume"
+elif workspace == "adb-2337711742831462": #p1
+    catalog_name = "uc_verevening"
+    schema_name = "test"
+    volume_name = "test_volume"
 
 
 # COMMAND ----------
@@ -20,12 +33,16 @@ spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{schema_name}   ")
 
 # COMMAND ----------
 
-spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog_name}.{schema_name}.{volume_name}   ")
+try:
+  spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog_name}.{schema_name}.{volume_name}   ")
+except Exception as e:
+  print(e)
+  spark.sql(f"CREATE VOLUME IF NOT EXISTS {schema_name}.{volume_name}   ")
 
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Read from excel
+# MAGIC #### Read from excel
 # MAGIC
 
 # COMMAND ----------
@@ -53,7 +70,7 @@ display(df_excel)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Write to excel
+# MAGIC #### Write to excel
 # MAGIC Note that writing a file directly to dbfs is not supported since you cannot keep a file open while writing. So you first need to create the file locally on cluster and then copy/write it to DBFS
 
 # COMMAND ----------
@@ -69,6 +86,21 @@ df_NewData = spark.createDataFrame(values,columns)
 
 # DBTITLE 1,combine some data
 df_excel.union(df_NewData)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### Formules in excel
+# MAGIC You also want to be able not just to write hard values but also the formulas itself to excel
+
+# COMMAND ----------
+
+
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### Write away the file
 
 # COMMAND ----------
 
