@@ -8,7 +8,10 @@ workspace = spark.conf.get("spark.databricks.workspaceUrl").split('.')[0]
 
 # COMMAND ----------
 
-spark.catalog.listCatalogs()
+try:
+    spark.catalog.listCatalogs()
+except Exception as e:
+    print(e)
 
 # COMMAND ----------
 
@@ -30,15 +33,17 @@ print(f"{catalog_name} {schema_name} {volume_name}")
 
 # COMMAND ----------
 
-spark.sql(f"USE {catalog_name} ;")
+try:
+    spark.sql(f"USE CATALOG {catalog_name};")
+except Exception as e:
+    print(e)
 
 # COMMAND ----------
 
-spark.sql(f"USE CATALOG {catalog_name};")
-
-# COMMAND ----------
-
-spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{schema_name}   ")
+try:
+    spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{schema_name}   ")
+except Exception as e:
+    print(e)
 
 # COMMAND ----------
 
@@ -46,7 +51,10 @@ try:
   spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog_name}.{schema_name}.{volume_name}   ")
 except Exception as e:
   print(e)
-  spark.sql(f"CREATE VOLUME IF NOT EXISTS {schema_name}.{volume_name}   ")
+  try:
+    spark.sql(f"CREATE VOLUME IF NOT EXISTS {schema_name}.{volume_name}   ")
+  except Exception as e:
+    print(e)
 
 # COMMAND ----------
 
@@ -213,65 +221,6 @@ list(sheet.values)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Security  
-# MAGIC https://openpyxl.readthedocs.io/en/stable/protection.html
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC #### Workbook protection
-
-# COMMAND ----------
-
-# To prevent other users from viewing hidden worksheets, adding, moving, deleting, or hiding worksheets, and renaming worksheets, you can protect the structure of your workbook with a password. The password can be set using the openpyxl.workbook.protection.WorkbookProtection.workbookPassword() property
-
-# Similarly removing change tracking and change history from a shared workbook can be prevented by setting another password. This password can be set using the openpyxl.workbook.protection.WorkbookProtection.revisionsPassword() property
-
-# from openpyxl import Workbook
-from openpyxl.workbook.protection import WorkbookProtection
-
-workbook.security = WorkbookProtection(
-    lockStructure = True, 
-    lockRevision=True
-    )
-    #    revisionsPassword = 'walther'
-    #      workbookPasswordCharacterSet = 'walther', 
-
-
-workbook.security.set_workbook_password('walther', already_hashed=False)
-
-workbook.save('excel_met_formule.xlsx')
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC #### Worksheet protection
-
-# COMMAND ----------
-
-# Various aspects of a worksheet can also be locked by setting attributes on the openpyxl.worksheet.protection.SheetProtection object. Unlike workbook protection, sheet protection may be enabled with or without using a password. Sheet protection is enabled using the openpxyl.worksheet.protection.SheetProtection.sheet attribute or calling enable() or disable():
-
-from openpyxl.worksheet.protection import SheetProtection
-
-worksheet = workbook['Blad1']
-worksheet.security = worksheet.protection.sheet = True
-worksheet.security = worksheet.protection.password = 'walther'
-worksheet.security = worksheet.protection.enable()
-# worksheet.protection.disable()
-
-# COMMAND ----------
-
-workbook.save('excel_met_formule.xlsx')
-
-# COMMAND ----------
-
-# MAGIC %sh
-# MAGIC # copy data from local cluster to dbfs
-# MAGIC mv excel_met_formule.xlsx /Volumes/uc_verevening/test/test_volume/test/excel_met_formule.xlsx
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC ### Conditional markup (formatting)
 # MAGIC
 # MAGIC https://openpyxl.readthedocs.io/en/stable/formatting.html
@@ -284,9 +233,10 @@ from openpyxl.formatting.rule import ColorScaleRule, CellIsRule, FormulaRule
 
 # COMMAND ----------
 
-workbook = Workbook(excel_path)
+workbook = openpyxl.load_workbook('/Volumes/uc_verevening/test/test_volume/test/excel_met_formule.xlsx')
+
 workbook.create_sheet('Blad2')
-worksheet = workbook['Blad2']
+#worksheet = workbook['Blad2']
 
 # COMMAND ----------
 
@@ -303,10 +253,86 @@ red_fill = PatternFill(
 # Add a conditional formatting based on a cell comparison
 # addCellIs(range_string, operator, formula, stopIfTrue, wb, font, border, fill)
 # Format if cell is less than 'formula'
-worksheet.conditional_formatting.add(
+
+workbook['Blad2'].conditional_formatting.add(
     'A1:A10',
     CellIsRule(operator='lessThan', formula=['10'], stopIfTrue=True, fill=red_fill)
     )
+
+
+
+# COMMAND ----------
+
+sheet = workbook['Blad2']
+sheet['A2'] = '50'
+sheet['A5'] = '5'
+
+# COMMAND ----------
+
+workbook.save('excel_met_formule.xlsx')
+
+# COMMAND ----------
+
+# MAGIC %sh
+# MAGIC # copy data from local cluster to dbfs
+# MAGIC mv excel_met_formule.xlsx /Volumes/uc_verevening/test/test_volume/test/excel_met_formule.xlsx
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Security  
+# MAGIC https://openpyxl.readthedocs.io/en/stable/protection.html
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Workbook protection
+
+# COMMAND ----------
+
+# To prevent other users from viewing hidden worksheets, adding, moving, deleting, or hiding worksheets, and renaming worksheets, you can protect the structure of your workbook with a password. The password can be set using the openpyxl.workbook.protection.WorkbookProtection.workbookPassword() property
+
+# Similarly removing change tracking and change history from a shared workbook can be prevented by setting another password. This password can be set using the openpyxl.workbook.protection.WorkbookProtection.revisionsPassword() property
+
+# from openpyxl import Workbook
+from openpyxl.workbook.protection import WorkbookProtection
+
+workbook = openpyxl.load_workbook('/Volumes/uc_verevening/test/test_volume/test/excel_met_formule.xlsx')
+
+workbook.security = WorkbookProtection(
+    lockStructure = True, 
+    lockRevision=True
+    )
+    #    revisionsPassword = 'walther'
+    #      workbookPasswordCharacterSet = 'walther', 
+
+
+workbook.security.set_workbook_password('walther', already_hashed=False)
+
+workbook.save('excel_met_formule.xlsx')
+
+# COMMAND ----------
+
+# MAGIC %sh
+# MAGIC # copy data from local cluster to dbfs
+# MAGIC mv excel_met_formule.xlsx /Volumes/uc_verevening/test/test_volume/test/excel_met_formule.xlsx
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Worksheet protection
+
+# COMMAND ----------
+
+# Various aspects of a worksheet can also be locked by setting attributes on the openpyxl.worksheet.protection.SheetProtection object. Unlike workbook protection, sheet protection may be enabled with or without using a password. Sheet protection is enabled using the openpxyl.worksheet.protection.SheetProtection.sheet attribute or calling enable() or disable():
+
+from openpyxl.worksheet.protection import SheetProtection
+
+worksheet = workbook['Blad1']
+worksheet.security = worksheet.protection.sheet = True
+worksheet.security = worksheet.protection.password = 'walther'
+worksheet.security = worksheet.protection.enable()
+# worksheet.protection.disable()
 
 # COMMAND ----------
 
