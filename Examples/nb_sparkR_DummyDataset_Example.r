@@ -46,6 +46,25 @@ display(spark_df)
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC Create a test database to write away data
+
+# COMMAND ----------
+
+# load package
+library(sparklyr)
+
+# Connect sparklyr to a cluster
+sc <- spark_connect(method = "databricks")
+
+# Create a database
+sdf_sql(sc,"CREATE DATABASE IF NOT EXISTS test")
+
+# change to this database 
+tbl_change_db(sc, "test")
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC write the dataset to a delta table
 
 # COMMAND ----------
@@ -56,9 +75,29 @@ saveAsTable(spark_df, tableName="test.r_table",mode="overwrite")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC check the results
+# MAGIC collect the table in R
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select * from `test`.`r_table` limit 100;
+r_table <- spark_read_table(sc,name = "r_table")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC View the table in notebook
+
+# COMMAND ----------
+
+collect(r_table)
+
+# COMMAND ----------
+
+print(r_table, n=5)
+
+# COMMAND ----------
+
+head(r_table)
+
+# COMMAND ----------
+
+show(r_table)
