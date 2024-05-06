@@ -39,3 +39,8 @@ table_name <- "city_price_data"
 query <- paste("SELECT * FROM ", catalog, ".", schema, ".", table_name)
 
 collect(sdf_sql(sc, query))
+
+# COMMAND ----------
+
+
+collect(sdf_sql(sc,"SELECT * FROM uc_concurrentie.test.city_price_data"))
