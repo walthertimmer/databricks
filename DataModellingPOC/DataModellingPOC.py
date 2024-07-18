@@ -5,6 +5,7 @@
 # MAGIC How do seperate data modelling tools look at tables and relations inside Databricks?
 # MAGIC
 # MAGIC https://medium.com/@kamaljp/untangling-databases-data-modeling-with-dbeaver-b2e53ca06ca9
+# MAGIC https://www.databricks.com/blog/data-modeling-best-practices-implementation-modern-lakehouse
 # MAGIC
 # MAGIC Due note:
 # MAGIC Table constraints are only supported in Unity Catalog
